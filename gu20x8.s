@@ -5,11 +5,11 @@
 	ORB   = $A010
 	ACR   = $A01B
 	SHIFT = $A01A
-	BLUEBUFF = $00
-	REDBUFF = $20
-	COLOR = $FF
-	MASK = $16
-	MASKINV = $17
+	BLUEBUFF = $7000
+	REDBUFF = $7020
+	COLOR = $7034 
+	MASK = $7035 
+	MASKINV = $7036 
 
 
 	;; DEBUG ROUTINES
@@ -30,7 +30,7 @@ GINIT:	LDA #$0F
 
 	;; Clears the buffer to black
 GCLEAR:	LDA #$00
-	LDX #$33		
+	LDX #$13		
 GCLEAR1:STA BLUEBUFF,X
 	STA REDBUFF,X
 	DEX
@@ -39,7 +39,7 @@ GCLEAR1:STA BLUEBUFF,X
 	
 	;; Paint routine updates the display with the contents of the RAM buffer
 GPAINT:	LDX #$13		; BLUE DATA
-GPAINT1:LDA $00,X
+GPAINT1:LDA BLUEBUFF,X
 	STX SHIFT		; ADDRESS
 	JSR GDELAY
 	STA SHIFT		; DATA
@@ -48,7 +48,7 @@ GPAINT1:LDA $00,X
 	TXA
 	ADC #$20
 	TAY
-	LDA $0000,Y
+	LDA BLUEBUFF,Y
 	STY SHIFT
 	JSR GDELAY
 	STA SHIFT
@@ -60,10 +60,10 @@ GPAINT1:LDA $00,X
 	
 	;; Shift out delay routine
 GDELAY:	PHX
-GDELAY1:LDX #$FF		; Count down until the 
+GDELAY1:LDX #$A0		; Count down until the 
 	DEX			; shift register has 
 	BPL GDELAY1		; shifted out our bits
-	PLX
+	PLX			; $A0 works as a reliable delay
 	RTS
 
 	;; WRITE/READ Toggle
@@ -93,7 +93,7 @@ GPLOT1:	DEY
 	BMI GPLOT2		; Branch when the result of decrementing Y is negative
 	ASL			; Shift the mask 1 bit until we get to the Y column
 	JMP GPLOT1		; Repeat
-GPLOT2:	STA MASK		; Save the normal mask to zero page location
+GPLOT2:	STA MASK		; Save the normal mask to RAM
 	EOR #$FF		; Invert the mask
 	STA MASKINV		; Store the inverted mask
 GPLOTH:	LDA BLUEBUFF,X		; Get the whole byte for the column we need (also entry point for HLINE)
@@ -125,7 +125,7 @@ GCOLOR1:DEY
 	BMI GCOLOR2		; Branch if decrementing Y is negative
 	ASL			; Shift mask for until we get to Y coord
 	JMP GCOLOR1		; Repeat until we get there
-GCOLOR2:STA MASK		; Save this mask into zero page
+GCOLOR2:STA MASK		; Save this mask into RAM
 	LDY #$00		; We'll keep track of the color in Y by starting with black
 	LDA BLUEBUFF,X		; Get the blue column for the X coord
 	AND MASK		; Test the blue bit
@@ -176,7 +176,7 @@ GVLINE:	PHY			; Save the Y coord for later
 GVLINE1:DEY			; Step through the length
 	BEQ GVLINE2		; End once we've completed the line
 	ASL			; Move the mask by 1 step
-	ORA #$01		; Add the next bit of the masl
+	ORA #$01		; Add the next bit of the mask
 	JMP GVLINE1		; Go around again
 GVLINE2:PLY			; Get that Y coord again
 GVLINE3:DEY			; Count down to position the mask at the Y coord

@@ -162,7 +162,7 @@ START:	JSR GINIT
 	JSR GPLOT
 	
 	JSR GPAINT
-	JSR GDELAY
+	JSR DELAY
 	
 	;; 15 Get red color and plot
 	LDX #$06
@@ -174,7 +174,7 @@ START:	JSR GINIT
 	JSR GPLOT
 	
 	JSR GPAINT
-	JSR GDELAY
+	JSR DELAY
 	
 	;; 16 Get white color and plot
 	LDX #$07
@@ -186,7 +186,7 @@ START:	JSR GINIT
 	JSR GPLOT
 	
 	JSR GPAINT
-	JSR GDELAY
+	JSR DELAY
 	
 	;; 17 Get black color and plot
 	LDX #$08
@@ -198,12 +198,18 @@ START:	JSR GINIT
 	JSR GPLOT
 	
 	JSR GPAINT
-	JSR GDELAY
+	JSR DELAY
 	
 	;; End the test
 	RTS
-	
 
+
+DELAY:	LDA $D011
+	BPL DELAY
+	LDA $D010
+	RTS
+
+/*
 DELAY:	LDX #$FF
 DELAY1:	DEX
 	BNE DELAY1
@@ -212,6 +218,7 @@ DELAY2:	DEX
 	BNE DELAY2
 	RTS
 	
+	*/
 
 
 
@@ -370,5 +377,5 @@ PTEST:	JSR GCLEAR
         RTS
 */
 
-#include "gu20x8.s"
+#include "../gu20x8.s"
 	
