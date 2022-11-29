@@ -1,4 +1,4 @@
-	;; testcard.s
+A	;; teAstcard.s
 	;; Displays a test pattern using all the routines
 	;; from the gu20x8.s library
 
