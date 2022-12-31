@@ -110,7 +110,7 @@ GBUSY1:
 	RTS
 
 	;; Plot a single pixel to the display
-	;; Uses the current color set in the COLOR zero page location
+	;; Uses the current color set in the COLOR location
 	;; $00 = black, $01 = blue, $02 = red, $03 = white
 	;; Use X and Y registers to define the coordinate of the pixel to plot 
 GPLOT:	
