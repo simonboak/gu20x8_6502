@@ -1,5 +1,9 @@
 	;; gu20x8.s
 	;; Library of routines for controlling the Noritake GU20x8 VFD
+	;;
+	;; Routines that use registers have an additional _BASIC calling 
+	;; point which populates the registers with the POKEd values from 
+	;; ARGA, ARGX, and ARGY locations.
 	
 	;; VIA locations
 	DDRB  = $A012
@@ -8,19 +12,23 @@
 	SHIFT = $A01A
 	
 	;; Memory used for the RAM buffer and other functions
-	BLUEBUFF = $0600
-	REDBUFF  = $0620
-	COLOR    = $0634
-	MASK     = $0635
-	MASKINV  = $0636
-
+	BLUEBUFF = $0700
+	REDBUFF  = $0720
+	COLOR    = $0734
+	MASK     = $0735
+	MASKINV  = $0736
+	
+	;; Locations for the Accumulator, X and Y registers for BASIC interfacing
+	ARGA     = $0737
+	ARGX     = $0738
+	ARGY     = $0739
 
 	;; APPLE 1 DEBUG ROUTINES - REMOVE (eventually)
 	PRBYTE = $FFDC
 
 
 	;; Init routine - call this first to set up the hardware
-	;; Automatically clears the buffer and then updates the dipslay
+	;; Automatically clears the buffer and then updates the display
 	;; Sets the plot color to blue
 GINIT:	
 	LDA #$0F
@@ -53,8 +61,12 @@ GPAINT1:
 	STA SHIFT		; DATA
 	JSR GDELAY
 	JSR GWR			; WRITE TO GU20X8
+	JSR GDELAY		; Extra delay sometines needed?
+	JSR GDELAY		; Extra delay sometines needed?
+	JSR GDELAY		; Extra delay sometines needed?
 	TXA
-	ADC #$20
+	CLC
+	ADC #$20		; Add our offset to get to the red buffer
 	TAY
 	LDA BLUEBUFF,Y
 	STY SHIFT
@@ -83,11 +95,11 @@ GWR:
 	STA ORB			; Output it
 	LDA #$0F
 	STA ORB
-	JSR GBUSY		; Wait for dipslay to finish before we return
+	JSR GBUSY		; Wait for display to finish before we return
 	PLA
 	RTS
 
-	;; Waits until the busy bit of the dipslay is 0
+	;; Waits until the busy bit of the display is 0
 GBUSY:	
 	PHA
 GBUSY1:
@@ -136,7 +148,11 @@ GPLOT3:
 	STA REDBUFF,X	; Save if back
 GPLOT4:
 	RTS				; We're done plotting this pixel
-	
+GPLOT_BASIC:
+	LDX ARGX
+	LDY ARGY
+	JMP GPLOT
+		
 	;; Get the color of a pixel at location defined by registers X Y
 	;; Returns the color in A
 GCOLOR:
@@ -163,6 +179,12 @@ GCOLOR3:
 GCOLOR5:
 	TYA				; Move the blue (or black) pixel to A
 	RTS				; Return with color in A
+GCOLOR_BASIC:
+	LDX ARGX
+	LDY ARGY
+	JSR GCOLOR
+	STA ARGA
+	RTS
 
 	;; Fill the display with the current plot color
 GFILL:
@@ -219,6 +241,11 @@ GVLINE3:
 	JMP GVLINE3		; Go around agin
 GVLINE4:
 	JMP GPLOT2		; Jump into the mask saving step of GPLOT to draw a full line
+GVLINE_BASIC:
+	LDA ARGA
+	LDX ARGX
+	LDY ARGY
+	JMP GVLINE
 
 	;; Draw a horizontal line in the current plot color
 	;; Starting coordinated passed in the X and Y registers
@@ -245,6 +272,12 @@ GHLINE3:
 	JMP GHLINE3		; Keep goind
 GHLINE4:
 	RTS
+GHLINE_BASIC:
+	LDA ARGA
+	LDX ARGX
+	LDY ARGY
+	JMP GHLINE
+
 
 	;; Change the brightness of the screen
 	;; Pass the value in the X register
@@ -265,3 +298,6 @@ GBRITE:
 	LDA #$0F		; Disable command and return to data mode
 	STA ORB
 	RTS
+GBRITE_BASIC:
+	LDX ARGX
+	JMP GBRITE
