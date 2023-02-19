@@ -1,6 +1,14 @@
 # Gu20x8 6502 Routines
 
+A set of routines for driving the Noritake Itron Gu20x8 vacuum fluorescent display.
 
+See `Gu20x8 6522 VIA Schematic.pdf` for how to connect this to the 6522 VIA. This schematic shows how to use a pair of 74HC164 shift registers to send the display data in serial from the processor.
+
+The binary is assembled to be run from location `$300` but this can be changed to any desired location. No page zero memory is used by the program.
+
+The `testcard` directory contains a sample program that tests the routines, and corresponding image of what the display should be showing.
+
+A sample paint program is also provided. This is written for the Apple 1. Move the "brush" with WASD keys, space to "paint" the current pixel, and digits 0 through 3 to set the paint colour. N clears the screen and Q returns from the program.
 
 ## Memory Locations
 
